@@ -18,24 +18,24 @@ const db = firebase.initializeApp({
 	appId: process.env.FIREBASE_APP_ID
 })
 
+// create reusable transporter object using the default SMTP transport
+const transporter = nodemailer.createTransport({
+	host: process.env.HOST,
+	port: 587,
+	secure: false, // true for 465, false for other ports
+	auth: {
+		user: process.env.SENDER,
+		pass: process.env.PASSWORD
+	},
+	tls: {
+		rejectUnauthorized: false
+	}
+})
+
 app.use(cors())
 app.use(express.json())
 
 app.post('/send', (req, res) => {
-	// create reusable transporter object using the default SMTP transport
-	let transporter = nodemailer.createTransport({
-		host: process.env.HOST,
-		port: 587,
-		secure: false, // true for 465, false for other ports
-		auth: {
-			user: process.env.SENDER,
-			pass: process.env.PASSWORD
-		},
-		tls: {
-			rejectUnauthorized: false
-		}
-	})
-
 	const { name, email, subject, message } = req.body
 
 	// setup email data with unicode symbols
@@ -74,7 +74,7 @@ app.post('/send', (req, res) => {
 	transporter.sendMail(mailOptions, (error, info) => {
 		if (error) {
 			return res.sendStatus(500)
-		} 
+		}
 
 		// save to database
 		db.firestore().collection('contacts').add({
@@ -85,24 +85,11 @@ app.post('/send', (req, res) => {
 			timestamp: new Date().toLocaleString()
 		})
 		// return server response
-		res.sendStatus(200)		
+		res.sendStatus(200)
 	})
 })
 
 app.post('/quote', (req, res) => {
-	// create reusable transporter object using the default SMTP transport
-	let transporter = nodemailer.createTransport({
-		host: process.env.HOST,
-		port: 587,
-		secure: false, // true for 465, false for other ports
-		auth: {
-			user: process.env.SENDER,
-			pass: process.env.PASSWORD
-		},
-		tls: {
-			rejectUnauthorized: false
-		}
-	})
 	const { name, email, company, job, phone, country, services, type, hosting, time, budget, message } = req.body
 	// setup email data with unicode symbols
 	let mailOptions = {
@@ -172,7 +159,7 @@ app.post('/quote', (req, res) => {
 	transporter.sendMail(mailOptions, (error, info) => {
 		if (error) {
 			return res.sendStatus(500)
-		} 
+		}
 		// save to database
 		db.firestore().collection('requests').add({
 			name,
